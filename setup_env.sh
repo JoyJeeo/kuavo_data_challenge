@@ -12,15 +12,36 @@ echo "==================================================="
 echo "👉 第 1 步：检查并安装 ROS 环境依赖 (requirements_ros_env.txt)"
 echo "==================================================="
 
-# 检查文件是否存在
-if [ -f "requirements_ros_env.txt" ]; then
-    # pip 会自动检查，如果已安装则跳过，未安装则下载
-    pip install -r requirements_ros_env.txt
-    echo "✅ ROS 环境依赖检查/安装完成！"
+# 提示用户输入，并将输入结果存入变量 INSTALL_ROS
+read -p "是否需要检查 ROS 环境依赖？[Y/n] (默认: Y): " CHECK_ROS
+
+# 如果用户直接按回车，输入为空，则默认赋值为 "Y"
+CHECK_ROS=${CHECK_ROS:-Y}
+
+# 判断用户输入是否为 Y, y 或者 yes
+if [[ "$CHECK_ROS" == "Y" || "$CHECK_ROS" == "y" || "$CHECK_ROS" == "yes" || "$CHECK_ROS" == "Yes" ]]; then
+    # 检查文件是否存在（虽然肯定存在，但保留检查是个好习惯，防患于未然）
+    if [ -f "requirements_ros_env.txt" ]; then
+        echo "⏳ 正在检查并安装 ROS 环境依赖..."
+        
+        # 将 pip install 放在 if 中，如果成功返回 0，失败返回非 0
+        if pip install -r requirements_ros_env.txt; then
+            echo "✅ ROS 环境依赖检查/安装完成！"
+        else
+            # pip 报错时会进入这里
+            echo "❌ 错误：ros依赖库不全，请仔细核对ROS是否安装好"
+            # 退出脚本，防止在缺少依赖的情况下继续执行后续代码
+            exit 1
+        fi
+    else
+        echo "❌ 错误：未找到 requirements_ros_env.txt 文件，请确认它与此脚本在同一目录下！"
+        exit 1
+    fi
 else
-    echo "❌ 错误：未找到 requirements_ros_env.txt 文件，请确认它与此脚本在同一目录下！"
-    exit 1
+    # 如果用户输入 n、N 或其他字符
+    echo "⏭️  已跳过 ROS 环境依赖的检查与安装。"
 fi
+
 
 echo ""
 echo "==================================================="
@@ -69,10 +90,24 @@ else
     echo "文件夹 flash_attn-2.8.3 已存在，跳过下载和解压。"
 fi
 
-cd flash_attn-2.8.3/
-# 使用 MAX_JOBS=2 限制编译核心数，防止内存溢出 (OOM)
-MAX_JOBS=2 python setup.py install
-cd ../
+# 尝试在 Python 中导入 flash_attn，并将输出和错误信息丢弃 (&> /dev/null)
+if python -c "import flash_attn" &> /dev/null; then
+    echo "检测到 flash_attn 已安装，跳过编译。"
+else
+    echo "未检测到 flash_attn，准备开始编译安装..."
+    
+    # 进入目录，如果目录不存在则报错并退出
+    cd flash_attn-2.8.3/ || { echo "错误: 找不到 flash_attn-2.8.3/ 目录"; exit 1; }
+    
+    # 使用 MAX_JOBS=2 限制编译核心数，防止内存溢出 (OOM)
+    echo "正在使用 MAX_JOBS=2 编译安装 flash-attn，这可能需要一些时间..."
+    MAX_JOBS=2 python setup.py install
+    
+    # 返回上级目录
+    cd ../
+    
+    echo "flash_attn 安装流程执行完毕。"
+fi
 
 
 echo "==================================================="

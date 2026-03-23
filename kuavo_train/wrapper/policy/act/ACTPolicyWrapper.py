@@ -29,42 +29,42 @@ class CustomACTPolicyWrapper(ACTPolicy):
         super().__init__(config)
         self.model = CustomACTModelWrapper(config)
 
-    @torch.no_grad()
-    def select_action(self, batch: dict[str, Tensor]) -> Tensor:
-        """Select a single action given environment observations.
+    # @torch.no_grad()
+    # def select_action(self, batch: dict[str, Tensor]) -> Tensor:
+    #     """Select a single action given environment observations.
 
-        This method wraps `select_actions` in order to return one action at a time for execution in the
-        environment. It works by managing the actions in a queue and only calling `select_actions` when the
-        queue is empty.
-        """
-        self.eval()  # keeping the policy in eval mode as it could be set to train mode while queue is consumed
-        if self.config.temporal_ensemble_coeff is not None:
-            tic = time.time()
-            actions = self.predict_action_chunk(batch)[:, 1:, :]
-            print(f'========== action shape {actions.shape}')
-            action = self.temporal_ensembler.update(actions)
-            toc = time.time()
+    #     This method wraps `select_actions` in order to return one action at a time for execution in the
+    #     environment. It works by managing the actions in a queue and only calling `select_actions` when the
+    #     queue is empty.
+    #     """
+    #     self.eval()  # keeping the policy in eval mode as it could be set to train mode while queue is consumed
+    #     if self.config.temporal_ensemble_coeff is not None:
+    #         tic = time.time()
+    #         actions = self.predict_action_chunk(batch)[:, 1:, :]
+    #         print(f'========== action shape {actions.shape}')
+    #         action = self.temporal_ensembler.update(actions)
+    #         toc = time.time()
 
-            print(F'=========== time predict action {toc - tic}')
-            return action
+    #         print(F'=========== time predict action {toc - tic}')
+    #         return action
 
-        # Action queue logic for n_action_steps > 1. When the action_queue is depleted, populate it by
-        # querying the policy.
-        if len(self._action_queue) == 0:
-            # assert False
-            tic = time.time()
+    #     # Action queue logic for n_action_steps > 1. When the action_queue is depleted, populate it by
+    #     # querying the policy.
+    #     if len(self._action_queue) == 0:
+    #         # assert False
+    #         tic = time.time()
             
-            print(f'==== into action predict ==== {self.config.n_action_steps}')
-            actions = self.predict_action_chunk(batch)[:, 1: 1+self.config.n_action_steps]
+    #         print(f'==== into action predict ==== {self.config.n_action_steps}')
+    #         actions = self.predict_action_chunk(batch)[:, 1: 1+self.config.n_action_steps]
 
-            # actions = self.predict_action_chunk(batch)[:, : self.config.n_action_steps]
-            toc = time.time()
+    #         # actions = self.predict_action_chunk(batch)[:, : self.config.n_action_steps]
+    #         toc = time.time()
 
-            print(F'=========== time predict action {toc - tic}')
-            # `self.model.forward` returns a (batch_size, n_action_steps, action_dim) tensor, but the queue
-            # effectively has shape (n_action_steps, batch_size, *), hence the transpose.
-            self._action_queue.extend(actions.transpose(0, 1))
-        return self._action_queue.popleft()
+    #         print(F'=========== time predict action {toc - tic}')
+    #         # `self.model.forward` returns a (batch_size, n_action_steps, action_dim) tensor, but the queue
+    #         # effectively has shape (n_action_steps, batch_size, *), hence the transpose.
+    #         self._action_queue.extend(actions.transpose(0, 1))
+    #     return self._action_queue.popleft()
 
     @torch.no_grad()
     def predict_action_chunk(self, batch: dict[str, Tensor]) -> Tensor:

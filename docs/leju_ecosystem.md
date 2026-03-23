@@ -11,21 +11,20 @@
 
 | 赛事名称 | 简介 | 官方链接 |
 |----------|------|----------|
-| **第一届具身智能操作任务挑战赛 & 创业启航营** | 乐聚机器人联合北京通用人工智能研究院、阿里云天池举办。以「真实任务 + 开源数据 + 真机评测」为核心，面向真实工业场景的具身智能落地，提供约 **50 万奖金** 与真机支持。支持仿真赛与真机赛，仿真阶段晋级队伍可进入真机评测。 | [天池赛事主页](https://tianchi.aliyun.com/competition/entrance/532415) · [赛事文档](https://kdc-doc.netlify.app/tianchi/cn/) |
-| **ICRA · REAL-I 具身智能挑战赛** | IEEE 机器人与自动化顶会 ICRA 2026 官方赛事。提供约 **9 万美元奖池**、**3 万条多模态数据** 及真机评测，面向具身智能与机器人操作任务。 | 详见 [OpenLET 社区资讯](https://openlet.openatom.tech/explore/journalism) |
-| **阿里云天池 · 具身智能挑战赛** | 与阿里云天池平台合作的具身智能相关赛事，可关注天池大赛与 OpenLET 社区获取最新赛题与时间。 | [天池大赛](https://tianchi.aliyun.com/) · [OpenLET 社区](https://openlet.openatom.tech/) |
-| **CRAIC 人形机器人挑战赛** | 面向人形机器人的专项挑战赛，由 OpenLET 社区与合作伙伴共同推动。 | [OpenLET 社区](https://openlet.openatom.tech/) |
+| **第一届具身智能操作任务挑战赛 & 创业启航营** | 乐聚机器人联合北京通用人工智能研究院、阿里云天池举办。以「真实任务 + 开源数据 + 真机评测」为核心，面向真实工业场景的具身智能落地，提供约 **50 万奖金** 与真机支持。支持仿真赛与真机赛，仿真阶段晋级队伍可进入真机评测。 | [赛事主页](https://tianchi.aliyun.com/competition/entrance/532415) · [手册文档](https://kdc-doc.netlify.app/tianchi/cn/) |
+| **ICRA · REAL-I 具身智能挑战赛** | IEEE 机器人与自动化顶会 ICRA 2026 官方赛事。提供约 **9 万美元奖池**、**3 万条多模态数据** 及真机评测，面向具身智能与机器人操作任务。 | [赛事主页](https://www.kdc.icra.lejurobot.com/home) · [手册文档](https://kdc-doc.netlify.app/icra/en/pages/introduction)|
+| **CRAIC 人形机器人挑战赛** | 面向人形机器人的专项挑战赛，由 OpenLET 社区与合作伙伴共同推动。 | [大赛官网](https://www.caairobot.com/) · [OpenLET 社区](https://openlet.openatom.tech/column/detail/2017949220300001280/) |
 
-!!! tip "赛事文档（第一届具身智能操作任务挑战赛）"
-    第一届具身智能操作任务挑战赛的**数据、基准代码、仿真与提交说明**等，请参阅官方赛事文档：  
-    **[https://kdc-doc.netlify.app/tianchi/cn/](https://kdc-doc.netlify.app/tianchi/cn/)**  
-    包含报名、数据集、安装与训练指南、提交方式等。本仓库（Kuavo Data Challenge）为该赛事的基准代码之一。
+!!! tip "赛事代码库"
+    github开源仓库（[Kuavo Data Challenge](https://github.com/LejuRobotics/kuavo_data_challenge)）为上述赛事的基准代码仓库，提供了数据转换、处理、训练、部署评测等。
 
 ---
 
 ## 开源项目与资源
 
-### 1. Kuavo ROS 开源（kuavo-ros-opensource）
+### 1. 基于夸父系列机器人的模仿学习代码库 Kuavo Data Challenge
+
+### 2. Kuavo ROS 开源（kuavo-ros-opensource）
 
 | 项目 | 说明 |
 |------|------|
@@ -37,7 +36,7 @@
 
 ---
 
-### 2. LET 数据集（乐聚开源数据集）
+### 3. LET 数据集（乐聚开源数据集）
 
 | 项目 | 说明 |
 |------|------|
@@ -48,7 +47,7 @@
 
 ---
 
-### 3. 乐聚 OpenLET 社区
+### 4. 乐聚 OpenLET 社区
 
 | 项目 | 说明 |
 |------|------|

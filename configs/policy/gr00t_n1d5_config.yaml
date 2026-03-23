@@ -138,12 +138,12 @@ policy:
     embodiment_tag: "new_embodiment"  # 默认参数
     
     # Fine-tuning control arguments
-    tune_llm: false
-    tune_visual: true
-    tune_projector: true
-    tune_diffusion_model: true
-    
-    # LoRA parameters (currently not used, but kept for compatibility)
+    tune_llm: false  # 是否微调LLM
+    tune_visual: true  # 是否微调视觉模型
+    tune_projector: true  # 是否微调投影头
+    tune_diffusion_model: true  # 是否微调扩散模型
+
+    # LoRA parameters (目前默认不使用lora的方法微调，lora微调的方法性能不佳， 可在不需全量微调的情况下尝试使用)
     lora_rank: 0  # LORA模型的秩，如果为0则不使用LORA
     lora_alpha: 16  # LORA模型的alpha值
     lora_dropout: 0.1  # LORA模型的dropout率
