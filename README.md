@@ -1,4 +1,3 @@
-
 # 🚀 **Kuavo Data Challenge**
 
 > 具身智能操作任务挑战赛 | 乐聚机器人·北京通用人工智能研究院 | [2025/09 2026/03]
@@ -669,5 +668,12 @@ import lerobot_patches.custom_patches  # Ensure custom patches are applied, DON'
 
 本项目基于 [**Lerobot**](https://github.com/huggingface/lerobot) 扩展而成。
 感谢 HuggingFace 团队开发的开源机器人学习框架，为本项目提供了重要基础。
+
+
+## License
+
+This project is licensed under **Apache-2.0**.
+
+This project includes code from [LeRobot](https://github.com/huggingface/lerobot) (SPDX-License-Identifier: Apache-2.0), copyright HuggingFace Inc. team and other contributors.
 
 
