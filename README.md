@@ -672,7 +672,7 @@ import lerobot_patches.custom_patches  # Ensure custom patches are applied, DON'
 
 ## License
 
-This project is licensed under **Apache-2.0**.
+This project is licensed under **GNU GPL-3.0-or-later**.
 
 This project includes code from [LeRobot](https://github.com/huggingface/lerobot) (SPDX-License-Identifier: Apache-2.0), copyright HuggingFace Inc. team and other contributors.
 
