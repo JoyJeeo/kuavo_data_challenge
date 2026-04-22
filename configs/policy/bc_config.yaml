@@ -1,0 +1,80 @@
+hydra: # Hydra config directory, for parameter checking only
+  run:
+    dir: ./outputs/train_hydra_save/singlerun/${now:%Y%m%d_%H%M%S}
+  sweep:
+    dir: ./outputs/train_hydra_save/multirun/${now:%Y%m%d_%H%M%S}
+    subdir: ${hydra:job.override_dirname}
+
+
+task: "your_task_name"
+method: "your_method_name"
+timestamp: ${now:%Y%m%d_%H%M%S}
+repoid: "lerobot/${task}"
+root: "/home/zhangyutao/macbook/dataset/icra_sim1/lerobot"
+
+training:
+    output_directory: "outputs/train/${task}/${method}"
+    seed: 42
+    max_epoch: 300
+
+    save_freq_epoch: 10
+    log_freq: 1
+    device: "cuda"
+    accumulation_steps: 1
+
+    batch_size: 8
+    num_workers: 8
+    drop_last: False
+
+    max_training_step: null
+
+    resume: false
+    resume_timestamp: "run_20251120_164240"
+
+    scheduler_name: cosine
+    scheduler_warmup_steps: 500
+
+    RGB_Augmenter:
+      enable: False
+      max_num_transforms: 1
+      random_order: True
+      tfs:
+        notransform:
+          weight: 1.0
+          type: "Identity"
+          kwargs: {}
+
+policy_name: bc  # Policy type. Supports diffusion / act / bc
+
+policy:
+    _target_: kuavo_train.wrapper.policy.bc.BCConfigWrapper.CustomBCConfigWrapper
+
+    # sequence control
+    n_obs_steps: 1
+    n_action_steps: 1
+
+    # model
+    hidden_dim: 256
+    num_layers: 3
+    dropout: 0.1
+
+    # loss
+    loss_type: l1  # l1 | l2
+
+    # optimizer preset
+    optimizer_lr: 1e-4
+    optimizer_betas:
+      - 0.9
+      - 0.999
+    optimizer_eps: 1.0e-08
+    optimizer_weight_decay: 1.0e-05
+
+    normalization_mapping:
+      STATE:
+        _target_: lerobot.configs.types.NormalizationMode
+        value: MEAN_STD
+      ACTION:
+        _target_: lerobot.configs.types.NormalizationMode
+        value: MEAN_STD
+
+    custom: {}

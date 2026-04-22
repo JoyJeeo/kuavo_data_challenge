@@ -13,9 +13,9 @@ hydra:  # Hydra config directory, for parameter checking only
 # lerobot repository: https://github.com/huggingface/lerobot
 
 rosbag:
-  rosbag_dir: /path/to/your/rosbag # rosbag file directory
+  rosbag_dir: /home/zhangyutao/macbook/dataset/icra_sim1 # rosbag file directory
   num_used: null # Quantities of rosbag used (will randomly choose the selected amount of files). null denotes all rosbags
-  lerobot_dir: /your/path/to/your/lerobotdata/  # Lerobot output directory after conversion. The lerobot folder will be created and all converted data will be saved here
+  lerobot_dir: /home/zhangyutao/macbook/dataset/icra_sim1  # Lerobot output directory after conversion. The lerobot folder will be created and all converted data will be saved here
 
 dataset:
   #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -24,7 +24,7 @@ dataset:
   #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   eef_type: rq2f85 # End-effector type. rq2f85 for simulation. Real-device options being leju_claw (claw, used in this competition) or qiangnao (dexhand)
   which_arm: both  # Which arm joint + image data to use. Available options:left, right, both. Head cam data will be included regardless
-  use_depth: true  # Whether to enable depth, according to which cameras to be used from above. The act and dp policies in this branch all have depth support.
+  use_depth: false  # Whether to enable depth, according to which cameras to be used from above. The act and dp policies in this branch all have depth support.
   depth_range: [0, 1500]  # Depth image crop area, in mm. Used for normalisation.
  
   task_description: "Pick and Place" # Task description, change if desired

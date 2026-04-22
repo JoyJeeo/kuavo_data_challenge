@@ -84,8 +84,21 @@ python kuavo_train/train_policy.py \
 * `method`：自定义，方法名，用于区分不同的训练，如`diffusion_bs128_usedepth_nofuse`等
 * `root`：训练数据的本地路径，注意加上lerobot，与1中的数转保存路径需要对应，为：`/path/to/lerobot_data/lerobot`
 * `training.batch_size`：批大小，可根据 GPU 显存调整
-* `policy_name`：使用的策略，用于策略实例化的，目前支持`diffusion`和`act`
+* `policy_name`：使用的策略，用于策略实例化的，目前支持`diffusion`、`act`和`bc`
 * 其他参数可详见yaml文件说明，推荐直接修改yaml文件，避免命令行输入错误
+
+BC 训练示例（仅 state 输入）：
+
+```bash
+python kuavo_train/train_policy.py \
+  --config-path=../configs/policy/ \
+  --config-name=bc_config.yaml \
+  task=your_task_name \
+  method=bc_baseline \
+  root=/path/to/lerobot_data/lerobot \
+  training.batch_size=256 \
+  policy_name=bc
+```
 
 ---
 

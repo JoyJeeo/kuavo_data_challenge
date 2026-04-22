@@ -21,8 +21,10 @@ from lerobot.datasets.sampler import EpisodeAwareSampler
 from lerobot.datasets.utils import dataset_to_policy_features
 from lerobot.utils.random_utils import set_seed
 from lerobot.policies.factory import make_pre_post_processors
+from lerobot.policies.tdmpc.processor_tdmpc import make_tdmpc_pre_post_processors
 from kuavo_train.wrapper.policy.diffusion.DiffusionPolicyWrapper import CustomDiffusionPolicyWrapper
 from kuavo_train.wrapper.policy.act.ACTPolicyWrapper import CustomACTPolicyWrapper
+from kuavo_train.wrapper.policy.bc.BCPolicyWrapper import CustomBCPolicyWrapper
 from kuavo_train.wrapper.dataset.LeRobotDatasetWrapper import CustomLeRobotDataset
 from kuavo_train.utils.augmenter import crop_image, resize_image, DeterministicAugmenterColor
 from kuavo_train.utils.utils import save_rng_state, load_rng_state
@@ -107,6 +109,7 @@ def build_policy(name, policy_cfg):
     policy = {
         "diffusion": CustomDiffusionPolicyWrapper,
         "act": CustomACTPolicyWrapper,
+        "bc": CustomBCPolicyWrapper,
     }[name](policy_cfg)
     return policy
 
@@ -221,6 +224,7 @@ def main(cfg: DictConfig):
     dataset_metadata = LeRobotDatasetMetadata(cfg.repoid, root=cfg.root)
     print("Camera_keys:", dataset_metadata.camera_keys)
     print("Original dataset features:", dataset_metadata.features)
+    # import ipdb; ipdb.set_trace()  # check
 
     features = dataset_to_policy_features(dataset_metadata.features)
     input_features = {k: ft for k, ft in features.items() if ft.type is not FeatureType.ACTION}
@@ -232,10 +236,22 @@ def main(cfg: DictConfig):
     # instantiate the policy
     policy_cfg = build_policy_config(cfg, input_features, output_features)
     print("policy_cfg", policy_cfg)
+    # Keep runtime device aligned with policy config auto-fallback (e.g. cuda -> cpu).
+    device = torch.device(policy_cfg.device)
 
     # Build policy
     policy = build_policy(cfg.policy_name, policy_cfg)
-    preprocessor, postprocessor = make_pre_post_processors(policy_cfg, dataset_stats=dataset_metadata.stats)
+    try:
+        preprocessor, postprocessor = make_pre_post_processors(policy_cfg, dataset_stats=dataset_metadata.stats)
+    except NotImplementedError:
+        if cfg.policy_name == "bc":
+            # custom_bc is not registered in upstream processor factory.
+            # Reuse the generic MLP-like processor path.
+            preprocessor, postprocessor = make_tdmpc_pre_post_processors(
+                config=policy_cfg, dataset_stats=dataset_metadata.stats
+            )
+        else:
+            raise
     preprocessor.save_pretrained(output_directory)
     postprocessor.save_pretrained(output_directory)
     optimizer, lr_scheduler = build_optimizer_and_scheduler(policy, cfg, dataset_metadata.info["total_frames"])

@@ -25,6 +25,7 @@ from lerobot.utils.random_utils import set_seed
 from lerobot.policies.factory import make_pre_post_processors
 from kuavo_train.wrapper.policy.diffusion.DiffusionPolicyWrapper import CustomDiffusionPolicyWrapper
 from kuavo_train.wrapper.policy.act.ACTPolicyWrapper import CustomACTPolicyWrapper
+from kuavo_train.wrapper.policy.bc.BCPolicyWrapper import CustomBCPolicyWrapper
 from kuavo_train.wrapper.dataset.LeRobotDatasetWrapper import CustomLeRobotDataset
 from kuavo_train.utils.augmenter import crop_image, resize_image, DeterministicAugmenterColor
 from kuavo_train.utils.utils import save_rng_state, load_rng_state
@@ -110,6 +111,7 @@ def build_policy(name, policy_cfg):
     policy = {
         "diffusion": CustomDiffusionPolicyWrapper,
         "act": CustomACTPolicyWrapper,
+        "bc": CustomBCPolicyWrapper,
     }[name](policy_cfg)
     return policy
 

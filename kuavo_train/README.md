@@ -84,8 +84,21 @@ Details:
 * `method`: Customise your own method name here to differentiate between different training attempts, such as `diffusion_bs128_usedepth_nofuse`
 * `root`: Local path of your training data. Note that typically the `lerobot` folder name also needs to be present, and should be the same as the output path of step 1 above. I.e. `/path/to/lerobot_data/lerobot`
 * `training.batch_size`: Batch size, adjust based on your GPU memory size
-* `policy_name`: The policy type in use. Now supports only `diffusion` and `act` options
+* `policy_name`: The policy type in use. Supports `diffusion`, `act`, and `bc`.
 * Other parameters details can be found in the yaml files. It is recommended to directly modify such yaml files as to avoid command input typos
+
+BC example (state-only):
+
+```bash
+python kuavo_train/train_policy.py \
+  --config-path=../configs/policy/ \
+  --config-name=bc_config.yaml \
+  task=your_task_name \
+  method=bc_baseline \
+  root=/path/to/lerobot_data/lerobot \
+  training.batch_size=256 \
+  policy_name=bc
+```
 
 ---
 
