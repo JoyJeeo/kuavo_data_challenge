@@ -87,7 +87,7 @@ def build_optimizer_and_scheduler(policy, cfg, total_frames):
     # If `max_training_step` is specified, it takes precedence; 
     # otherwise, the value is automatically determined based on `max_epoch`.
     if cfg.training.max_training_step is None:
-        updates_per_epoch = (total_frames // (cfg.training.batch_size * cfg.training.accumulation_steps)) + 1
+        updates_per_epoch = (total_frames // (cfg.training.batch_size * cfg.training.accumulation_steps)) + 1 # 推理出：训练中每个batch对应的样本单位是，frame
         num_training_steps = cfg.training.max_epoch * updates_per_epoch
     else:
         num_training_steps = cfg.training.max_training_step
@@ -103,7 +103,7 @@ def build_optimizer_and_scheduler(policy, cfg, total_frames):
         )
 
     # or you can set your optimizer and lr_scheduler here and replace it.
-    return optimizer, lr_scheduler
+    return optimizer, lr_scheduler # 优化器改参数、lr调度器改学习率大小
 
 def build_policy(name, policy_cfg):
     policy = {
@@ -216,9 +216,9 @@ def main(cfg: DictConfig):
     # Setup output directory
     output_directory = Path(cfg.training.output_directory) / f"run_{cfg.timestamp}"
     output_directory.mkdir(parents=True, exist_ok=True)
-    writer = SummaryWriter(log_dir=str(output_directory))
+    writer = SummaryWriter(log_dir=str(output_directory)) # tensorboard的日志存储目录
 
-    device = torch.device(cfg.training.device)
+    device = torch.device(cfg.training.device) # 训练中想用的设备
 
     # Dataset metadata and features
     dataset_metadata = LeRobotDatasetMetadata(cfg.repoid, root=cfg.root)
@@ -237,7 +237,7 @@ def main(cfg: DictConfig):
     policy_cfg = build_policy_config(cfg, input_features, output_features)
     print("policy_cfg", policy_cfg)
     # Keep runtime device aligned with policy config auto-fallback (e.g. cuda -> cpu).
-    device = torch.device(policy_cfg.device)
+    device = torch.device(policy_cfg.device) # 实际使用的设备，经过PreTrainedConfig.__post_init__()检查后
 
     # Build policy
     policy = build_policy(cfg.policy_name, policy_cfg)
@@ -252,15 +252,18 @@ def main(cfg: DictConfig):
             )
         else:
             raise
+    # 根据模型训练使用的数据集的stats信息，保存一份数据归一化配置参数，保证resume和depoly时采集的数据处理方式和训练时处理方式一致
     preprocessor.save_pretrained(output_directory)
     postprocessor.save_pretrained(output_directory)
     optimizer, lr_scheduler = build_optimizer_and_scheduler(policy, cfg, dataset_metadata.info["total_frames"])
     
     # Initialize AMP GradScaler if use_amp is True
+    # 混合精度：在 GPU 上用「聪明的精度降级」同时节省显存、加速训练，又不损失数值稳定性。
     amp_requested = bool(getattr(cfg.policy, "use_amp", False))
     amp_enabled = amp_requested and device.type == "cuda"
 
     # autocast context (cuda, or no-op when disabled/non-cuda)
+    # 根据AMP创建上下文调度器
     has_torch_autocast = hasattr(torch, "autocast")
     def make_autocast(enabled: bool):
         if not enabled:
@@ -273,13 +276,14 @@ def main(cfg: DictConfig):
                 return cuda_autocast()
         # Fallback: disable on non-cuda to avoid dtype surprises
         return nullcontext()
-
+    
+    # 根据AMP创建梯度调度器
     scaler = torch.amp.GradScaler(device=device.type, enabled=amp_enabled) if hasattr(torch, "amp") else torch.cuda.amp.GradScaler(device=device.type, enabled=amp_enabled)
     # print("scaler", device.type, make_autocast(amp_enabled))
     # Initialize training state variables
     start_epoch = 0
     steps = 0
-    best_loss = float('inf')
+    best_loss = float('inf') # inf无穷大 -inf无穷小
 
     # ===== Resume logic (perfect resume for AMP & RNG) =====
     
@@ -288,15 +292,19 @@ def main(cfg: DictConfig):
         print("Resuming from:", resume_path)
         try:
             # Load RNG state
+            # 恢复随机数生成器状态（Python/NumPy/Torch）。
+            # 目的：增强可复现性，让后续采样、增强、dropout 更接近“未中断”轨迹。
             load_rng_state(resume_path / "rng_state.pth")
             
             # Load policy
+            # 加载已有实例，strict=True通常表示参数名/形状必须严格匹配
             policy = policy.from_pretrained(resume_path, strict=True)
             preprocessor = preprocessor.from_pretrained(resume_path,config_filename="policy_preprocessor.json")
 
             """ Warning: using `from_pretrained` creates a new policy instance, 
             so the optimizer must be reinitialized here! """
             # print("load policy done ! ")
+            # 根据恢复的权重文件的policy，配置优化器和lr调度器到当前的训练状态
             optimizer, lr_scheduler = build_optimizer_and_scheduler(policy, cfg, dataset_metadata.info["total_frames"])
             
             # Load optimizer, scheduler, scaler and training state
@@ -335,14 +343,15 @@ def main(cfg: DictConfig):
     # Build dataset and dataloader
     delta_timestamps = build_delta_timestamps(dataset_metadata, policy_cfg)
 
-    image_transforms = build_augmenter(cfg.training.RGB_Augmenter)
+    image_transforms = build_augmenter(cfg.training.RGB_Augmenter) # 构建图像数据增强
     dataset = LeRobotDataset(
         cfg.repoid,
         delta_timestamps=delta_timestamps,
         root=cfg.root,
         image_transforms=None,
-    )
+    ) # 训练需要用到的全量数据集
     # Training loop
+    # 将数据增强器加入训练的pre数据预处理管线流程中
     aug_step = insert_before_normalizer(preprocessor, AugmentationProcessorStep(image_transforms, dataset.meta.camera_keys))  # just for training
     
     if hasattr(cfg.policy, "drop_n_last_frames"):
@@ -364,18 +373,18 @@ def main(cfg: DictConfig):
             batch_size=cfg.training.batch_size,
             shuffle=shuffle,
             sampler=sampler,
-            pin_memory=(device.type != "cpu"),
+            pin_memory=(device.type != "cpu"), # gpu训练时，加速主机到显存的拷贝
             drop_last=cfg.training.drop_last,
-            prefetch_factor=2 if cfg.training.num_workers > 0 else None,
+            prefetch_factor=2 if cfg.training.num_workers > 0 else None, # 数据预加载
         )
 
-        epoch_bar = tqdm(dataloader, desc=f"Epoch {epoch+1}/{cfg.training.max_epoch}")
+        epoch_bar = tqdm(dataloader, desc=f"Epoch {epoch+1}/{cfg.training.max_epoch}") # 一轮epoch训练的进度条显示状态
 
         
         total_loss = 0.0
-        for batch in epoch_bar:
+        for batch in epoch_bar: # 按批次遍历当前 epoch 的数据。epoch_bar 是 tqdm(dataloader, ...)，本质还是 dataloader，只是带进度条显示。
             batch = preprocessor(batch)  # will normalize and put batch to device
-            with make_autocast(amp_enabled):
+            with make_autocast(amp_enabled): # AMP前向处理
                 loss, _ = policy.forward(batch)
             # Scale loss and backward with AMP if enabled
             scaled_loss = loss / cfg.training.accumulation_steps
@@ -391,9 +400,9 @@ def main(cfg: DictConfig):
                     scaler.step(optimizer)
                     scaler.update()
                 else:
-                    optimizer.step()
+                    optimizer.step() # 更新参数
                 optimizer.zero_grad()
-                lr_scheduler.step()
+                lr_scheduler.step() # 更新学习率
 
             if steps % cfg.training.log_freq == 0:
                 writer.add_scalar("train/loss", scaled_loss.item(), steps)
@@ -401,7 +410,7 @@ def main(cfg: DictConfig):
                 epoch_bar.set_postfix(loss=f"{scaled_loss.item():.3f}", step=steps, lr=lr_scheduler.get_last_lr()[0])
 
             steps += 1
-            total_loss += scaled_loss.item()
+            total_loss += scaled_loss.item() # 把当前 batch 的标量 loss（Python 数值）累加到本 epoch 的总损失里
         
         # Update best loss
         if total_loss < best_loss:
